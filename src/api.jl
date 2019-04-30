@@ -5,7 +5,7 @@
 mutable struct KafkaClient
     conf::Dict{Any, Any}
     typ::Cint
-    rk::Ptr{Void}
+    rk::Ptr{Cvoid}
 end
 
 
@@ -37,7 +37,7 @@ Base.show(io::IO, kc::KafkaClient) = print(io, "KafkaClient($(kc.typ))")
 mutable struct KafkaTopic
     conf::Dict{Any, Any}
     topic::String
-    rkt::Ptr{Void}
+    rkt::Ptr{Cvoid}
 end
 
 
