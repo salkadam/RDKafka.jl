@@ -13,7 +13,7 @@ end
 
 
 function kafka_conf_set(conf::Ptr{Cvoid}, key::String, val::String)
-    err_str = Array{UInt8}(512)
+    err_str = Array{UInt8}(undef, 512)
     return ccall((:rd_kafka_conf_set, LIBRDKAFKA), Cvoid,
                  (Ptr{Cvoid}, Cstring, Cstring, Ptr{UInt8}, Csize_t),
                  conf, key, val, pointer(err_str), sizeof(err_str))
@@ -21,7 +21,7 @@ end
 
 
 function kafka_conf_get(conf::Ptr{Cvoid}, key::String)
-    dest = Array{UInt8}(512)
+    dest = Array{UInt8}(undef, 512)
     sz_ref = Ref{Csize_t}(0)
     ccall((:rd_kafka_conf_get, LIBRDKAFKA), Cvoid,
           (Ptr{Cvoid}, Cstring, Ptr{UInt8}, Ptr{Csize_t}),
@@ -37,7 +37,7 @@ const KAFKA_TYPE_CONSUMER = Cint(1)
 
 
 function kafka_new(conf::Ptr{Cvoid}, kafka_type::Cint)
-    err_str = Array{UInt8}(512)
+    err_str = Array{UInt8}(undef, 512)
     client = ccall((:rd_kafka_new, LIBRDKAFKA),
                    Ptr{Cvoid},
                    (Cint, Ptr{Cvoid}, Ptr{UInt8}, Csize_t),
@@ -58,13 +58,13 @@ function kafka_topic_conf_new()
 end
 
 
-function kafka_topic_conf_destroy(conf::Ptr{Void})
+function kafka_topic_conf_destroy(conf::Ptr{Cvoid})
     ccall((:rd_kafka_topic_conf_destroy, LIBRDKAFKA), Cvoid, (Ptr{Cvoid},), conf)
 end
 
 
 function kafka_topic_conf_set(conf::Ptr{Cvoid}, key::String, val::String)
-    err_str = Array{UInt8}(512)
+    err_str = Array{UInt8}(undef, 512)
     return ccall((:rd_kafka_topic_conf_set, LIBRDKAFKA), Cvoid,
                  (Ptr{Cvoid}, Cstring, Cstring, Ptr{UInt8}, Csize_t),
                  conf, key, val, pointer(err_str), sizeof(err_str))
@@ -72,7 +72,7 @@ end
 
 
 function kafka_topic_conf_get(conf::Ptr{Cvoid}, key::String)
-    dest = Array{UInt8}(512)
+    dest = Array{UInt8}(undef, 512)
     sz_ref = Ref{Csize_t}(0)
     ccall((:rd_kafka_topic_conf_get, LIBRDKAFKA), Cvoid,
           (Ptr{Cvoid}, Cstring, Ptr{UInt8}, Ptr{Csize_t}),
@@ -83,7 +83,7 @@ end
 
 # rd_kafka_topic_t
 
-function kafka_topic_new(rk::Ptr{Void}, topic::String, topic_conf::Ptr{Cvoid})
+function kafka_topic_new(rk::Ptr{Cvoid}, topic::String, topic_conf::Ptr{Cvoid})
     return ccall((:rd_kafka_topic_new, LIBRDKAFKA), Ptr{Cvoid},
                  (Ptr{Cvoid}, Cstring, Ptr{Cvoid}),
                  rk, topic, topic_conf)
@@ -100,19 +100,18 @@ function kafka_poll(rk::Ptr{Cvoid}, timeout::Integer)
     return ccall((:rd_kafka_poll, LIBRDKAFKA), Cint,
                  (Ptr{Cvoid}, Cint),
                  rk, timeout)
-    
+
 end
 
-
 # int rd_kafka_produce(rd_kafka_topic_t *rkt, int32_t partition,
-# 		      int msgflags,
-# 		      void *payload, size_t len,
-# 		      const void *key, size_t keylen,
-# 		      void *msg_opaque);
+#                     int msgflags,
+#                     void *payload, size_t len,
+#                     const void *key, size_t keylen,
+#                     void *msg_opaque);
 
 
 
-function Base.produce(rkt::Ptr{Coid}, partition::Integer,
+function produce1(rkt::Ptr{Cvoid}, partition::Integer,
                  key::Vector{UInt8}, payload::Vector{UInt8})
     flags = Cint(0)
     errcode = ccall((:rd_kafka_produce, LIBRDKAFKA), Cint,
@@ -161,7 +160,7 @@ function kafka_assignment(rk::Ptr{Cvoid}, rkparlist::Ptr{Cvoid})
         error("Assignment retrieval failed with error $errcode")
     end
 end
-    
+
 
 ## subscribe
 
@@ -194,10 +193,11 @@ function kafka_consumer_poll(rk::Ptr{Cvoid}, timeout::Integer)
         return msg_ptr
     else
         return nothing
-    end 
+    end
 end
 
 
 function kafka_message_destroy(msg_ptr::Ptr{CKafkaMessage})
     ccall((:rd_kafka_message_destroy, LIBRDKAFKA), Cvoid, (Ptr{Cvoid},), msg_ptr)
 end
+
