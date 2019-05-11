@@ -1,4 +1,3 @@
-
 # TODO: add finalizers for all disposable objects
 # TODO: ensure all require _poll methods are invoked in fixed intervals
 
@@ -81,21 +80,22 @@ function Base.show(io::IO, p::KafkaProducer)
 end
 
 
-function produce(kt::KafkaTopic, partition::Integer, key, payload)
-    produce(kt.rkt, partition, key, payload)
-    #produce(kt.rkt, partition, convert(Vector{UInt8}, key), convert(Vector{String}, payload))
+function produce1(kt::KafkaTopic, partition::Integer, key, payload)
+    #produce(kt.rkt, partition, key, payload)
+    produce(kt.rkt, partition, Vector{UInt8}(key), Vector{UInt8}(payload))
 end
 
 
-function produce(p::KafkaProducer, topic::String, partition::Integer, key, payload)
+function produce1(p::KafkaProducer, topic::String, partition::Integer, key, payload)
     if !haskey(p.topics, topic)
         p.topics[topic] = KafkaTopic(p.client, topic, Dict())
     end
-    produce(p.topics[topic], partition, key, payload)
+    produce1(p.topics[topic], partition, key, payload)
 end
 
 
 ## consumer
+
 struct Message{K,P}
     err::Int
     topic::KafkaTopic
@@ -104,7 +104,6 @@ struct Message{K,P}
     payload::Union{P, Cvoid}
     offset::Int64
 end
-
 
 function Message{K,P}(c_msg::CKafkaMessage) where {K,P}
     topic = KafkaTopic(Dict(), "<unkown>", c_msg.rkt)
